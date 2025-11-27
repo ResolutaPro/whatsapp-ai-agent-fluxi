@@ -32,8 +32,8 @@ RUN mkdir -p uploads/rags sessoes rags && \
 RUN mkdir -p /app/data && \
     chmod 755 /app/data
 
-# Expose port (default 8000, can be overridden)
-EXPOSE 8000
+# Expose port (default 8001, can be overridden)
+EXPOSE 8001
 
 # Set environment variables
 ENV PYTHONPATH=/app
@@ -42,7 +42,7 @@ ENV DATABASE_URL=sqlite:///./data/fluxi.db
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8001/health || exit 1
 
 # Run the application
 CMD ["python", "main.py"]

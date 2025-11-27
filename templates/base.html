@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>{% block title %}Fluxi.IA - Assistente WhatsApp Inteligente{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    
     <!-- Bulma CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     
@@ -34,6 +40,160 @@
             --warning: #f59e0b;
             --danger: #ef4444;
             --info: #3b82f6;
+            --box-bg: #ffffff;
+            --input-bg: #ffffff;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* ========== DARK MODE ========== */
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16162a;
+            --bg-hover: #252542;
+            --text-primary: #e5e5e5;
+            --text-secondary: #a0a0a0;
+            --text-muted: #6b6b6b;
+            --border-color: #2d2d4a;
+            --box-bg: #1e1e36;
+            --input-bg: #252542;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        [data-theme="dark"] .box,
+        [data-theme="dark"] .card {
+            background: var(--box-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .input,
+        [data-theme="dark"] .textarea,
+        [data-theme="dark"] .select select {
+            background: var(--input-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .table {
+            background: var(--box-bg) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .table th,
+        [data-theme="dark"] .table td {
+            border-color: var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .title,
+        [data-theme="dark"] .subtitle,
+        [data-theme="dark"] h1, [data-theme="dark"] h2, 
+        [data-theme="dark"] h3, [data-theme="dark"] h4 {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .label {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* Dark mode - cores inline comuns */
+        [data-theme="dark"] [style*="color: #1f2937"],
+        [data-theme="dark"] [style*="color: #374151"],
+        [data-theme="dark"] [style*="color:#1f2937"],
+        [data-theme="dark"] [style*="color:#374151"] {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] [style*="color: #6b7280"],
+        [data-theme="dark"] [style*="color:#6b7280"],
+        [data-theme="dark"] [style*="color: #4b5563"],
+        [data-theme="dark"] [style*="color:#4b5563"] {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] [style*="background: #f9fafb"],
+        [data-theme="dark"] [style*="background:#f9fafb"],
+        [data-theme="dark"] [style*="background: #f3f4f6"],
+        [data-theme="dark"] [style*="background:#f3f4f6"],
+        [data-theme="dark"] [style*="background: #f8f9fa"],
+        [data-theme="dark"] [style*="background:#f8f9fa"],
+        [data-theme="dark"] [style*="background: #f0f7ff"],
+        [data-theme="dark"] [style*="background:#f0f7ff"],
+        [data-theme="dark"] [style*="background: white"],
+        [data-theme="dark"] [style*="background:#ffffff"],
+        [data-theme="dark"] [style*="background: #f5f5f5"],
+        [data-theme="dark"] [style*="background:#f5f5f5"],
+        [data-theme="dark"] [style*="background: #fff5f5"],
+        [data-theme="dark"] [style*="background:#fff5f5"] {
+            background: var(--box-bg) !important;
+        }
+        
+        /* Dark mode - Wizard específico */
+        [data-theme="dark"] .wizard-progress li::before {
+            background: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .wizard-progress li::after {
+            background: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .code-editor,
+        [data-theme="dark"] .param-item,
+        [data-theme="dark"] .variable-item,
+        [data-theme="dark"] .help-box {
+            background: var(--input-bg) !important;
+        }
+        
+        [data-theme="dark"] [style*="border-color: #e5e7eb"],
+        [data-theme="dark"] [style*="border: 1px solid #e5e7eb"],
+        [data-theme="dark"] [style*="border: 2px solid #e5e7eb"] {
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] [style*="border-bottom: 2px solid #e5e7eb"] {
+            border-bottom-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .breadcrumb a,
+        [data-theme="dark"] .breadcrumb li {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .breadcrumb li.is-active a {
+            color: var(--fluxi-pink) !important;
+        }
+        
+        [data-theme="dark"] .help {
+            color: var(--text-muted) !important;
+        }
+        
+        [data-theme="dark"] .card {
+            background: var(--box-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .card-footer {
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .card-footer-item {
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] pre {
+            background: #0d1117 !important;
+        }
+        
+        [data-theme="dark"] .level {
+            background: var(--box-bg) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] details {
+            border-color: var(--border-color) !important;
+        }
+        
+        [data-theme="dark"] .notification {
+            background: var(--box-bg) !important;
         }
         
         /* ========== RESET ========== */
@@ -666,7 +826,6 @@
         <div class="sidebar-header">
             <a href="/" class="sidebar-logo">
                 <img src="https://fluxiia.com/logo-hwGzN_ZF.png" alt="Fluxi.IA">
-                <span class="sidebar-logo-text">fluxi.IA</span>
             </a>
             <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
                 <i class="fas fa-bars"></i>
@@ -747,6 +906,13 @@
                 </nav>
                 {% endif %}
             </div>
+            <div class="topbar-right" style="display: flex; align-items: center; gap: 1rem;">
+                <button id="theme-toggle" onclick="toggleTheme()" 
+                        style="background: none; border: none; cursor: pointer; font-size: 1.25rem; color: var(--text-secondary); padding: 0.5rem; border-radius: 8px; transition: all 0.2s;"
+                        title="Alternar tema">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+            </div>
         </header>
         
         <!-- Main Content -->
@@ -797,6 +963,35 @@
                 document.getElementById('mobileOverlay').classList.remove('active');
             }
         });
+        
+        // ========== DARK MODE ==========
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            
+            if (isDark) {
+                html.removeAttribute('data-theme');
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Carregar tema salvo ou preferência do sistema
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const icon = document.getElementById('theme-icon');
+            
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                if (icon) icon.className = 'fas fa-sun';
+            }
+        })();
     </script>
     
     {% block extra_js %}{% endblock %}

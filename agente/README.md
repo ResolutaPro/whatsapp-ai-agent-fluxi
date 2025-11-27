@@ -334,8 +334,10 @@ Ferramentas têm diferentes tipos de output:
 
 ### Histórico de Mensagens
 - Sistema mantém **últimas 10 mensagens** no contexto
-- Inclui mensagens de texto e imagens
-- Formato: `user` → `assistant` → `user` → ...
+- Inclui mensagens de texto e imagens (formato multimodal)
+- Inclui respostas do assistente (`resposta_texto`)
+- Formato: `user` → `assistant` → `user` → `assistant` → ...
+- Suporte a conteúdo misto (texto + imagem na mesma mensagem)
 
 ### Configurações Padrão
 Se o agente não tiver configurações LLM específicas, usa valores padrão do módulo `config`:

@@ -68,6 +68,10 @@ templates = Jinja2Templates(directory="templates")
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("sessoes", exist_ok=True)
 os.makedirs("rags", exist_ok=True)
+os.makedirs("static", exist_ok=True)
+
+# Montar arquivos estáticos (CSS, JS, imagens)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # Evento de inicialização
@@ -113,7 +117,7 @@ def startup_event():
             print(f"✅ {sessoes_reconectadas} sessão(ões) reconectada(s)")
         
         print("✅ Fluxi iniciado com sucesso!")
-        print("📱 Acesse: http://localhost:8000")
+        print("📱 Acesse: http://localhost:8001")
     finally:
         db.close()
 
@@ -179,5 +183,6 @@ if __name__ == "__main__":
         host=host,
         port=port,
         reload=debug,
-        log_level="info"
+        log_level="info",
+        reload_excludes=["sessoes/*", "*.db", "rags/*", "uploads/*", "*.log"] if debug else None
     )

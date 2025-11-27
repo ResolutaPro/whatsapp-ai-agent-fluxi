@@ -23,6 +23,7 @@ from mcp_client.mcp_schema import (
     MCPOneClickRequest
 )
 from mcp_client.mcp_presets import listar_presets, obter_preset
+from config.config_service import ConfiguracaoService
 
 
 class MCPService:
@@ -59,10 +60,11 @@ class MCPService:
     @staticmethod
     def criar(db: Session, mcp_client: MCPClientCriar) -> MCPClient:
         """Cria um novo cliente MCP."""
-        # Validar limite de 5 MCP clients por agente
+        # Validar limite de MCP clients por agente (configurável)
+        max_clients = ConfiguracaoService.obter_valor(db, "mcp_max_clients_por_agente", 5)
         total_existentes = MCPService.contar_por_agente(db, mcp_client.agente_id)
-        if total_existentes >= 5:
-            raise ValueError("Um agente pode ter no máximo 5 clientes MCP")
+        if total_existentes >= max_clients:
+            raise ValueError(f"Um agente pode ter no máximo {max_clients} clientes MCP")
 
         data = mcp_client.model_dump()
         db_mcp = MCPClient(**data)
@@ -591,11 +593,12 @@ class MCPService:
                 print(f"✅ [MCP] Reconectado com sucesso!")
             
             try:
-                # Executar tool com timeout de 60 segundos
+                # Executar tool com timeout configurável
+                timeout_mcp = ConfiguracaoService.obter_valor(db, "mcp_timeout_execucao", 60)
                 print(f"🚀 [MCP] Chamando session.call_tool('{tool_name}', {arguments})...")
                 result = await asyncio.wait_for(
                     session.call_tool(tool_name, arguments),
-                    timeout=60.0
+                    timeout=float(timeout_mcp)
                 )
                 print(f"✅ [MCP] session.call_tool retornou com sucesso")
                 print(f"📦 [MCP] Resultado RAW: {result}")
@@ -657,10 +660,11 @@ class MCPService:
                 }
             
             except asyncio.TimeoutError:
-                print(f"⏱️  [MCP] TIMEOUT: Tool '{tool_name}' demorou mais de 60 segundos")
+                timeout_mcp = ConfiguracaoService.obter_valor(db, "mcp_timeout_execucao", 60)
+                print(f"⏱️  [MCP] TIMEOUT: Tool '{tool_name}' demorou mais de {timeout_mcp} segundos")
                 tempo_ms = int((time.time() - inicio) * 1000)
                 return {
-                    "resultado": {"erro": f"Timeout ao executar tool MCP '{tool_name}' (60s)"},
+                    "resultado": {"erro": f"Timeout ao executar tool MCP '{tool_name}' ({timeout_mcp}s)"},
                     "output": "llm",
                     "enviado_usuario": False,
                     "tempo_ms": tempo_ms

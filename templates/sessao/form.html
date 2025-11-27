@@ -146,6 +146,144 @@
                 </div>
             </div>
 
+            {% if acao == 'criar' %}
+            <!-- Tipos de Mensagem -->
+            <div class="box" style="margin-bottom: 2rem;">
+                <h2 class="title is-5" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+                    <i class="fas fa-comments" style="color: #ec4899;"></i> Comportamento por Tipo de Mensagem
+                </h2>
+                <p style="color: #6b7280; margin-bottom: 1.5rem; line-height: 1.6;">
+                    Configure como esta sessão deve tratar cada tipo de mensagem recebida. Você pode alterar depois.
+                </p>
+
+                <!-- Áudio -->
+                <div style="background: #fdf4ff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #f0abfc;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #d946ef; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-microphone" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1f2937;">Mensagem de Áudio</strong>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_audio" value="enviar_ia" checked> Transcrever e enviar para IA responder</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_audio" value="transcricao_apenas"> Apenas responder com a transcrição</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_audio" value="resposta_fixa" onclick="document.getElementById('audio_resposta').style.display='block'"> Responder com mensagem fixa</label>
+                            <input type="text" class="input" name="tipo_audio_resposta" id="audio_resposta" placeholder="Digite a resposta..." style="display:none; margin-top: 0.5rem; margin-left: 1.5rem; max-width: 400px;">
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_audio" value="ignorar"> Ignorar</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imagem -->
+                <div style="background: #fef3c7; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #fcd34d;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #f59e0b; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-image" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1f2937;">Mensagem com Imagem</strong>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_imagem" value="enviar_ia" checked> Enviar para IA responder (visão)</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_imagem" value="resposta_fixa" onclick="document.getElementById('imagem_resposta').style.display='block'"> Responder com mensagem fixa</label>
+                            <input type="text" class="input" name="tipo_imagem_resposta" id="imagem_resposta" placeholder="Digite a resposta..." style="display:none; margin-top: 0.5rem; margin-left: 1.5rem; max-width: 400px;">
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_imagem" value="ignorar"> Ignorar</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vídeo -->
+                <div style="background: #f0f9ff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #7dd3fc;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #0ea5e9; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-video" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1f2937;">Mensagem com Vídeo</strong>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_video" value="ignorar" checked> Ignorar</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_video" value="resposta_fixa" onclick="document.getElementById('video_resposta').style.display='block'"> Responder com mensagem fixa</label>
+                            <input type="text" class="input" name="tipo_video_resposta" id="video_resposta" placeholder="Digite a resposta..." style="display:none; margin-top: 0.5rem; margin-left: 1.5rem; max-width: 400px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sticker -->
+                <div style="background: #fef2f2; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #fca5a5;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #ef4444; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-sticky-note" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1f2937;">Sticker (Figurinha)</strong>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_sticker" value="ignorar" checked> Ignorar</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_sticker" value="resposta_fixa" onclick="document.getElementById('sticker_resposta').style.display='block'"> Responder com mensagem fixa</label>
+                            <input type="text" class="input" name="tipo_sticker_resposta" id="sticker_resposta" placeholder="Digite a resposta..." style="display:none; margin-top: 0.5rem; margin-left: 1.5rem; max-width: 400px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Localização -->
+                <div style="background: #f0fdf4; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #86efac;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #22c55e; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-map-marker-alt" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1f2937;">Localização</strong>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_localizacao" value="ignorar" checked> Ignorar</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_localizacao" value="enviar_ia"> Enviar para IA (latitude/longitude)</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_localizacao" value="resposta_fixa" onclick="document.getElementById('localizacao_resposta').style.display='block'"> Responder com mensagem fixa</label>
+                            <input type="text" class="input" name="tipo_localizacao_resposta" id="localizacao_resposta" placeholder="Digite a resposta..." style="display:none; margin-top: 0.5rem; margin-left: 1.5rem; max-width: 400px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documento -->
+                <div style="background: #f5f3ff; border-radius: 8px; padding: 1rem; border: 1px solid #c4b5fd;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #8b5cf6; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-alt" style="color: white;"></i>
+                        </div>
+                        <strong style="color: #1f2937;">Documento</strong>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_documento" value="ignorar" checked> Ignorar</label>
+                        </div>
+                        <div class="control">
+                            <label class="radio"><input type="radio" name="tipo_documento" value="resposta_fixa" onclick="document.getElementById('documento_resposta').style.display='block'"> Responder com mensagem fixa</label>
+                            <input type="text" class="input" name="tipo_documento_resposta" id="documento_resposta" placeholder="Digite a resposta..." style="display:none; margin-top: 0.5rem; margin-left: 1.5rem; max-width: 400px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Botões -->
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <button type="submit" class="button is-primary is-medium" style="background: linear-gradient(135deg, #C75B9B 0%, #5B4E9B 100%); border: none; border-radius: 8px; font-weight: 600; padding: 0.75rem 2rem;">

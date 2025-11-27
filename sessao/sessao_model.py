@@ -50,6 +50,16 @@ class Sessao(Base):
         post_update=True,
         overlaps="agentes"
     )
+    tipos_mensagem = relationship(
+        "SessaoTipoMensagem",
+        back_populates="sessao",
+        cascade="all, delete-orphan"
+    )
+    comandos = relationship(
+        "SessaoComando",
+        back_populates="sessao",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Sessao(nome='{self.nome}', telefone='{self.telefone}', status='{self.status}')>"

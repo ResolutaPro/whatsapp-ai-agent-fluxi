@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from sessao.sessao_service import SessaoService
 from sessao.sessao_schema import SessaoCriar, SessaoAtualizar
+from sessao.sessao_tipo_mensagem_service import SessaoTipoMensagemService
 from config.config_service import ConfiguracaoService
 
 router = APIRouter(prefix="/sessoes", tags=["Frontend - Sessões"])
@@ -193,6 +194,19 @@ def criar_sessao_post(
     top_p: str = Form(None),
     auto_responder: str = Form(None),
     salvar_historico: str = Form(None),
+    # Tipos de mensagem
+    tipo_audio: str = Form("enviar_ia"),
+    tipo_audio_resposta: str = Form(""),
+    tipo_imagem: str = Form("enviar_ia"),
+    tipo_imagem_resposta: str = Form(""),
+    tipo_video: str = Form("ignorar"),
+    tipo_video_resposta: str = Form(""),
+    tipo_sticker: str = Form("ignorar"),
+    tipo_sticker_resposta: str = Form(""),
+    tipo_localizacao: str = Form("ignorar"),
+    tipo_localizacao_resposta: str = Form(""),
+    tipo_documento: str = Form("ignorar"),
+    tipo_documento_resposta: str = Form(""),
     db: Session = Depends(get_db)
 ):
     """Cria uma nova sessão via formulário."""
@@ -219,10 +233,194 @@ def criar_sessao_post(
             salvar_historico=salvar_historico_bool
         )
         
-        SessaoService.criar(db, sessao_data)
+        sessao = SessaoService.criar(db, sessao_data)
+        
+        # Criar configurações de tipos de mensagem
+        tipos_config = {
+            "audio": {"acao": tipo_audio, "resposta_fixa": tipo_audio_resposta if tipo_audio == "resposta_fixa" else None},
+            "imagem": {"acao": tipo_imagem, "resposta_fixa": tipo_imagem_resposta if tipo_imagem == "resposta_fixa" else None},
+            "video": {"acao": tipo_video, "resposta_fixa": tipo_video_resposta if tipo_video == "resposta_fixa" else None},
+            "sticker": {"acao": tipo_sticker, "resposta_fixa": tipo_sticker_resposta if tipo_sticker == "resposta_fixa" else None},
+            "localizacao": {"acao": tipo_localizacao, "resposta_fixa": tipo_localizacao_resposta if tipo_localizacao == "resposta_fixa" else None},
+            "documento": {"acao": tipo_documento, "resposta_fixa": tipo_documento_resposta if tipo_documento == "resposta_fixa" else None},
+        }
+        SessaoTipoMensagemService.atualizar_todos(db, sessao.id, tipos_config)
+        
         return RedirectResponse(url="/sessoes", status_code=303)
     except ValueError as e:
         return RedirectResponse(url=f"/sessoes/nova?erro={str(e)}", status_code=303)
+
+
+@router.get("/{sessao_id}/tipos-mensagem", response_class=HTMLResponse)
+def pagina_tipos_mensagem(sessao_id: int, request: Request, db: Session = Depends(get_db)):
+    """Página para configurar tipos de mensagem da sessão."""
+    sessao = SessaoService.obter_por_id(db, sessao_id)
+    if not sessao:
+        return templates.TemplateResponse("shared/erro.html", {
+            "request": request,
+            "mensagem": "Sessão não encontrada",
+            "titulo": "Erro"
+        })
+    
+    # Obter configurações atuais
+    configs = SessaoTipoMensagemService.listar_por_sessao(db, sessao_id)
+    
+    # Organizar por tipo
+    tipos = {}
+    for config in configs:
+        tipos[config.tipo] = {
+            "acao": config.acao,
+            "resposta_fixa": config.resposta_fixa
+        }
+    
+    # Garantir que todos os tipos existam
+    for tipo in ["audio", "imagem", "video", "sticker", "localizacao", "documento"]:
+        if tipo not in tipos:
+            tipos[tipo] = {"acao": "ignorar", "resposta_fixa": None}
+    
+    return templates.TemplateResponse("sessao/tipos_mensagem.html", {
+        "request": request,
+        "sessao": sessao,
+        "tipos": tipos,
+        "titulo": f"Tipos de Mensagem - {sessao.nome}"
+    })
+
+
+@router.post("/{sessao_id}/tipos-mensagem/salvar")
+def salvar_tipos_mensagem(
+    sessao_id: int,
+    tipo_audio: str = Form("ignorar"),
+    tipo_audio_resposta: str = Form(""),
+    tipo_imagem: str = Form("ignorar"),
+    tipo_imagem_resposta: str = Form(""),
+    tipo_video: str = Form("ignorar"),
+    tipo_video_resposta: str = Form(""),
+    tipo_sticker: str = Form("ignorar"),
+    tipo_sticker_resposta: str = Form(""),
+    tipo_localizacao: str = Form("ignorar"),
+    tipo_localizacao_resposta: str = Form(""),
+    tipo_documento: str = Form("ignorar"),
+    tipo_documento_resposta: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    """Salva configurações de tipos de mensagem."""
+    tipos_config = {
+        "audio": {"acao": tipo_audio, "resposta_fixa": tipo_audio_resposta if tipo_audio == "resposta_fixa" else None},
+        "imagem": {"acao": tipo_imagem, "resposta_fixa": tipo_imagem_resposta if tipo_imagem == "resposta_fixa" else None},
+        "video": {"acao": tipo_video, "resposta_fixa": tipo_video_resposta if tipo_video == "resposta_fixa" else None},
+        "sticker": {"acao": tipo_sticker, "resposta_fixa": tipo_sticker_resposta if tipo_sticker == "resposta_fixa" else None},
+        "localizacao": {"acao": tipo_localizacao, "resposta_fixa": tipo_localizacao_resposta if tipo_localizacao == "resposta_fixa" else None},
+        "documento": {"acao": tipo_documento, "resposta_fixa": tipo_documento_resposta if tipo_documento == "resposta_fixa" else None},
+    }
+    SessaoTipoMensagemService.atualizar_todos(db, sessao_id, tipos_config)
+    return RedirectResponse(url=f"/sessoes/{sessao_id}/detalhes", status_code=303)
+
+
+# ===================== COMANDOS PERSONALIZÁVEIS =====================
+
+@router.get("/{sessao_id}/comandos", response_class=HTMLResponse)
+def pagina_comandos(sessao_id: int, request: Request, db: Session = Depends(get_db)):
+    """Página para configurar comandos personalizáveis."""
+    from sessao.sessao_comando_service import SessaoComandoService
+    
+    sessao = SessaoService.obter_por_id(db, sessao_id)
+    if not sessao:
+        return RedirectResponse(url="/sessoes/", status_code=303)
+    
+    # Obter comandos (cria padrões se não existirem)
+    comandos = SessaoComandoService.obter_comandos_dict(db, sessao_id)
+    
+    return templates.TemplateResponse("sessao/comandos.html", {
+        "request": request,
+        "sessao": sessao,
+        "comandos": comandos
+    })
+
+
+@router.post("/{sessao_id}/comandos/salvar")
+def salvar_comandos(
+    sessao_id: int,
+    request: Request,
+    # Ativar/Desativar IA
+    cmd_ativar_ativo: str = Form(None),
+    cmd_ativar_gatilho: str = Form("#ativar"),
+    cmd_ativar_descricao: str = Form("Ativa o auto-responder da IA"),
+    cmd_ativar_resposta: str = Form(None),
+    cmd_desativar_ativo: str = Form(None),
+    cmd_desativar_gatilho: str = Form("#desativar"),
+    cmd_desativar_descricao: str = Form("Desativa o auto-responder da IA"),
+    cmd_desativar_resposta: str = Form(None),
+    # Limpar
+    cmd_limpar_ativo: str = Form(None),
+    cmd_limpar_gatilho: str = Form("#limpar"),
+    cmd_limpar_descricao: str = Form("Apaga o histórico de conversas"),
+    cmd_limpar_resposta: str = Form(None),
+    # Ajuda
+    cmd_ajuda_ativo: str = Form(None),
+    cmd_ajuda_gatilho: str = Form("#ajuda"),
+    cmd_ajuda_descricao: str = Form("Mostra comandos disponíveis"),
+    # Status
+    cmd_status_ativo: str = Form(None),
+    cmd_status_gatilho: str = Form("#status"),
+    cmd_status_descricao: str = Form("Mostra informações da sessão"),
+    # Listar
+    cmd_listar_ativo: str = Form(None),
+    cmd_listar_gatilho: str = Form("#listar"),
+    cmd_listar_descricao: str = Form("Lista agentes disponíveis"),
+    # Trocar Agente
+    cmd_trocar_agente_ativo: str = Form(None),
+    cmd_trocar_agente_gatilho: str = Form("#"),
+    cmd_trocar_agente_descricao: str = Form("Ativa um agente específico"),
+    cmd_trocar_agente_resposta: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Salva configurações de comandos."""
+    from sessao.sessao_comando_service import SessaoComandoService
+    
+    comandos_config = {
+        "ativar": {
+            "gatilho": cmd_ativar_gatilho,
+            "ativo": cmd_ativar_ativo == "true",
+            "descricao": cmd_ativar_descricao,
+            "resposta": cmd_ativar_resposta
+        },
+        "desativar": {
+            "gatilho": cmd_desativar_gatilho,
+            "ativo": cmd_desativar_ativo == "true",
+            "descricao": cmd_desativar_descricao,
+            "resposta": cmd_desativar_resposta
+        },
+        "limpar": {
+            "gatilho": cmd_limpar_gatilho,
+            "ativo": cmd_limpar_ativo == "true",
+            "descricao": cmd_limpar_descricao,
+            "resposta": cmd_limpar_resposta
+        },
+        "ajuda": {
+            "gatilho": cmd_ajuda_gatilho,
+            "ativo": cmd_ajuda_ativo == "true",
+            "descricao": cmd_ajuda_descricao
+        },
+        "status": {
+            "gatilho": cmd_status_gatilho,
+            "ativo": cmd_status_ativo == "true",
+            "descricao": cmd_status_descricao
+        },
+        "listar": {
+            "gatilho": cmd_listar_gatilho,
+            "ativo": cmd_listar_ativo == "true",
+            "descricao": cmd_listar_descricao
+        },
+        "trocar_agente": {
+            "gatilho": cmd_trocar_agente_gatilho,
+            "ativo": cmd_trocar_agente_ativo == "true",
+            "descricao": cmd_trocar_agente_descricao,
+            "resposta": cmd_trocar_agente_resposta
+        }
+    }
+    
+    SessaoComandoService.atualizar_todos(db, sessao_id, comandos_config)
+    return RedirectResponse(url=f"/sessoes/{sessao_id}/detalhes", status_code=303)
 
 
 @router.post("/{sessao_id}/atualizar")

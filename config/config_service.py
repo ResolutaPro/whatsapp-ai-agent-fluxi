@@ -288,6 +288,22 @@ class ConfiguracaoService:
                 "categoria": "openrouter",
                 "editavel": True
             },
+            {
+                "chave": "openrouter_frequency_penalty",
+                "valor": "0.0",
+                "tipo": "float",
+                "descricao": "Penalidade de frequência (-2.0 a 2.0). Evita repetição de palavras.",
+                "categoria": "openrouter",
+                "editavel": True
+            },
+            {
+                "chave": "openrouter_presence_penalty",
+                "valor": "0.0",
+                "tipo": "float",
+                "descricao": "Penalidade de presença (-2.0 a 2.0). Incentiva novos tópicos.",
+                "categoria": "openrouter",
+                "editavel": True
+            },
             # Agente
             {
                 "chave": "agente_papel_padrao",
@@ -360,6 +376,204 @@ class ConfiguracaoService:
                 "tipo": "int",
                 "descricao": "Tamanho máximo de imagem em MB",
                 "categoria": "geral",
+                "editavel": True
+            },
+            {
+                "chave": "sistema_qualidade_jpeg",
+                "valor": "85",
+                "tipo": "int",
+                "descricao": "Qualidade JPEG ao salvar imagens (1-100)",
+                "categoria": "geral",
+                "editavel": True
+            },
+            # Agente - Limites
+            {
+                "chave": "agente_max_ferramentas",
+                "valor": "20",
+                "tipo": "int",
+                "descricao": "Máximo de ferramentas por agente",
+                "categoria": "agente",
+                "editavel": True
+            },
+            {
+                "chave": "agente_max_iteracoes_loop",
+                "valor": "10",
+                "tipo": "int",
+                "descricao": "Máximo de iterações do loop de ferramentas",
+                "categoria": "agente",
+                "editavel": True
+            },
+            {
+                "chave": "agente_historico_mensagens",
+                "valor": "10",
+                "tipo": "int",
+                "descricao": "Quantidade de mensagens anteriores no contexto",
+                "categoria": "agente",
+                "editavel": True
+            },
+            {
+                "chave": "agente_rag_resultados_padrao",
+                "valor": "3",
+                "tipo": "int",
+                "descricao": "Número de resultados padrão na busca RAG",
+                "categoria": "agente",
+                "editavel": True
+            },
+            # Sessão WhatsApp
+            {
+                "chave": "sessao_history_sync_delay",
+                "valor": "5",
+                "tipo": "int",
+                "descricao": "Segundos para ignorar mensagens antigas ao conectar (history sync)",
+                "categoria": "sessao",
+                "editavel": True
+            },
+            {
+                "chave": "sessao_diretorio",
+                "valor": "./sessoes",
+                "tipo": "string",
+                "descricao": "Diretório para armazenar dados das sessões WhatsApp",
+                "categoria": "sessao",
+                "editavel": True
+            },
+            # Ferramentas padrão do agente
+            {
+                "chave": "agente_ferramentas_padrao",
+                "valor": "[\"obter_data_hora_atual\", \"calcular\"]",
+                "tipo": "json",
+                "descricao": "Ferramentas padrão ao criar um agente (nomes separados por vírgula)",
+                "categoria": "agente",
+                "editavel": True
+            },
+            # Áudio - Transcrição
+            {
+                "chave": "audio_transcricao_habilitado",
+                "valor": "true",
+                "tipo": "bool",
+                "descricao": "Habilitar transcrição de áudio",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_provedor",
+                "valor": "groq",
+                "tipo": "string",
+                "descricao": "Provedor de transcrição (groq, openai)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_modelo",
+                "valor": "whisper-large-v3-turbo",
+                "tipo": "string",
+                "descricao": "Modelo de transcrição",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_idioma",
+                "valor": "pt",
+                "tipo": "string",
+                "descricao": "Idioma do áudio (ISO 639-1: pt, en, es, etc.)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_temperatura",
+                "valor": "0.0",
+                "tipo": "float",
+                "descricao": "Temperatura para transcrição (0.0 recomendado)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_prompt",
+                "valor": "",
+                "tipo": "string",
+                "descricao": "Prompt para guiar transcrição (nomes próprios, siglas)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_formato",
+                "valor": "text",
+                "tipo": "string",
+                "descricao": "Formato de resposta (text, json, verbose_json)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_transcricao_timeout",
+                "valor": "60",
+                "tipo": "int",
+                "descricao": "Timeout para transcrição em segundos",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "audio_responder_habilitado",
+                "valor": "true",
+                "tipo": "bool",
+                "descricao": "Responder mensagens de áudio automaticamente",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "groq_api_key",
+                "valor": "",
+                "tipo": "string",
+                "descricao": "Chave de API do Groq (para transcrição)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            {
+                "chave": "openai_api_key",
+                "valor": "",
+                "tipo": "string",
+                "descricao": "Chave de API da OpenAI (para transcrição e outros serviços)",
+                "categoria": "audio",
+                "editavel": True
+            },
+            # MCP Client
+            {
+                "chave": "mcp_max_clients_por_agente",
+                "valor": "5",
+                "tipo": "int",
+                "descricao": "Máximo de clientes MCP por agente",
+                "categoria": "mcp",
+                "editavel": True
+            },
+            {
+                "chave": "mcp_timeout_execucao",
+                "valor": "60",
+                "tipo": "int",
+                "descricao": "Timeout para execução de tools MCP em segundos",
+                "categoria": "mcp",
+                "editavel": True
+            },
+            # Ferramentas - Timeouts
+            {
+                "chave": "ferramenta_timeout_http",
+                "valor": "30",
+                "tipo": "int",
+                "descricao": "Timeout para requisições HTTP em segundos",
+                "categoria": "ferramenta",
+                "editavel": True
+            },
+            {
+                "chave": "ferramenta_timeout_download",
+                "valor": "60",
+                "tipo": "int",
+                "descricao": "Timeout para download de mídia (vídeo/documento) em segundos",
+                "categoria": "ferramenta",
+                "editavel": True
+            },
+            {
+                "chave": "ferramenta_timeout_teste",
+                "valor": "10",
+                "tipo": "int",
+                "descricao": "Timeout para testes de ferramenta no wizard em segundos",
+                "categoria": "ferramenta",
                 "editavel": True
             },
         ]

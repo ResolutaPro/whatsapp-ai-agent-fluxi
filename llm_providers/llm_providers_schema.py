@@ -83,6 +83,8 @@ class ConfiguracaoProvedor(BaseModel):
     temperatura: float = Field(default=0.7, ge=0.0, le=2.0, description="Temperatura para geração")
     max_tokens: int = Field(default=2000, ge=1, le=100000, description="Máximo de tokens")
     top_p: float = Field(default=1.0, ge=0.0, le=1.0, description="Top P para amostragem")
+    frequency_penalty: float = Field(default=0.0, ge=-2.0, le=2.0, description="Penalidade de frequência (evita repetição)")
+    presence_penalty: float = Field(default=0.0, ge=-2.0, le=2.0, description="Penalidade de presença (novos tópicos)")
     top_k: Optional[int] = Field(default=None, ge=1, description="Top K para amostragem")
     repeat_penalty: Optional[float] = Field(default=None, ge=0.0, description="Penalidade de repetição")
     stop: Optional[List[str]] = Field(default=None, description="Sequências de parada")
@@ -91,7 +93,8 @@ class ConfiguracaoProvedor(BaseModel):
 
 class RequisicaoLLM(BaseModel):
     """Schema para requisição ao LLM."""
-    mensagens: List[Dict[str, str]] = Field(..., description="Lista de mensagens")
+    # content pode ser string ou lista (para suporte a imagens/vision)
+    mensagens: List[Dict[str, Any]] = Field(..., description="Lista de mensagens")
     modelo: str = Field(..., description="Nome do modelo")
     configuracao: Optional[ConfiguracaoProvedor] = Field(default=None, description="Configurações específicas")
     stream: bool = Field(default=True, description="Se deve usar streaming")

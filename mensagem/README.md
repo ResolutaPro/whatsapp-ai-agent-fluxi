@@ -2,7 +2,7 @@
 
 ## 📖 Visão Geral
 
-O módulo `mensagem` armazena e gerencia todas as mensagens recebidas e enviadas no WhatsApp, incluindo histórico, contexto e métricas de processamento.
+O módulo `mensagem` armazena e gerencia todas as mensagens recebidas e enviadas no WhatsApp, incluindo histórico, contexto e métricas de processamento. Também processa **comandos personalizáveis** e gerencia o **auto-responder** da IA.
 
 ## 🎯 Objetivo
 
@@ -11,6 +11,8 @@ O módulo `mensagem` armazena e gerencia todas as mensagens recebidas e enviadas
 - Histórico de conversas por cliente
 - Métricas de processamento (tokens, tempo)
 - Registro de ferramentas usadas
+- **Processamento de comandos** (#ativar, #desativar, #limpar, etc.)
+- **Tipos de mensagem configuráveis** (ações por tipo)
 
 ## 📂 Principais Componentes
 
@@ -47,7 +49,11 @@ O módulo `mensagem` armazena e gerencia todas as mensagens recebidas e enviadas
 1. Mensagem chega via WhatsApp
 2. Evento MessageEv disparado
 3. processar_mensagem_recebida()
-   - Extrai dados (texto/imagem)
+   - Extrai dados (texto/imagem/audio)
+   - Verifica tipo de mensagem e ação configurada
+   - Verifica se é comando (#ativar, #desativar, etc.)
+   - Se comando → executa e retorna
+   - Se auto_responder=False → ignora
    - Cria registro no banco
    - Busca histórico (10 últimas)
    - Chama agente_ativo
@@ -55,6 +61,41 @@ O módulo `mensagem` armazena e gerencia todas as mensagens recebidas e enviadas
    - Atualiza resposta_*
    - Marca como processada/respondida
 4. Resposta enviada ao cliente
+```
+
+## 🎮 Comandos Personalizáveis
+
+Comandos são processados via `SessaoComandoService` e podem ser configurados por sessão.
+
+### Comandos Padrão
+
+| Comando | Função |
+|---------|--------|
+| `#ativar` | Ativa o auto-responder da IA |
+| `#desativar` | Desativa o auto-responder |
+| `#limpar` | Apaga histórico de conversas |
+| `#ajuda` | Lista comandos disponíveis |
+| `#status` | Mostra status da sessão (IA ativa/inativa) |
+| `#listar` | Lista agentes disponíveis |
+| `#01`, `#02`... | Troca para agente específico |
+
+### Configuração de Comandos
+
+Cada comando pode ter:
+- **Gatilho** - Texto que ativa (ex: `#ativar`, `@ativar`)
+- **Ativo** - Se está habilitado
+- **Resposta** - Mensagem personalizada
+- **Descrição** - Aparece no `#ajuda`
+
+### Fluxo de Comando
+
+```python
+1. Mensagem recebida: "#desativar"
+2. SessaoComandoService.obter_por_gatilho() → encontra comando
+3. Verifica comando.ativo == True
+4. Executa ação (sessao.auto_responder = False)
+5. Envia resposta personalizada
+6. Retorna (não processa com LLM)
 ```
 
 ## 💡 Exemplo

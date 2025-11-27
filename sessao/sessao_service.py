@@ -10,10 +10,11 @@ import segno
 import io
 import base64
 from neonize.client import NewClient
-from neonize.events import MessageEv, ConnectedEv, QREv, PairStatusEv
+from neonize.events import MessageEv, ConnectedEv, QREv, PairStatusEv, LoggedOutEv
 from neonize.utils import build_jid
 from sessao.sessao_model import Sessao
 from sessao.sessao_schema import SessaoCriar, SessaoAtualizar, SessaoStatusResposta
+from config.config_service import ConfiguracaoService
 
 
 class GerenciadorSessoes:
@@ -177,12 +178,13 @@ class SessaoService:
         try:
             print(f"📦 Criando novo cliente Neonize...")
             
-            # Criar diretório se não existir
+            # Criar diretório se não existir (configurável)
             import os
-            os.makedirs("./sessoes", exist_ok=True)
+            sessao_dir = ConfiguracaoService.obter_valor(db, "sessao_diretorio", "./sessoes")
+            os.makedirs(sessao_dir, exist_ok=True)
             
             # Usar banco de dados persistente (permite reconexão)
-            db_path = f"./sessoes/sessao_{sessao_id}.db"
+            db_path = f"{sessao_dir}/sessao_{sessao_id}.db"
             print(f"💾 Usando banco de dados: {db_path}")
             
             # Criar cliente Neonize (conforme examples/basic.py)
@@ -312,6 +314,48 @@ class SessaoService:
                     del gerenciador_sessoes.qr_codes[sessao_id]
                     print(f"🧹 QR Code removido do gerenciador")
 
+            @cliente.event(LoggedOutEv)
+            def on_logged_out(client: NewClient, event: LoggedOutEv):
+                """Evento de logout/desconexão forçada."""
+                print(f"🔴 LOGOUT DETECTADO para sessão {sessao_id}")
+                print(f"📊 Razão: {event.Reason if hasattr(event, 'Reason') else 'Desconhecida'}")
+                
+                # Atualizar banco em nova sessão (thread-safe)
+                from database import SessionLocal
+                db_thread = SessionLocal()
+                try:
+                    sessao_db = db_thread.query(Sessao).filter(Sessao.id == sessao_id).first()
+                    if sessao_db:
+                        sessao_db.status = "desconectado"
+                        sessao_db.qr_code = None
+                        sessao_db.qr_code_gerado_em = None
+                        db_thread.commit()
+                        print(f"✅ Sessão {sessao_id} marcada como desconectada no banco")
+                    else:
+                        print(f"⚠️  Sessão {sessao_id} não encontrada no banco")
+                finally:
+                    db_thread.close()
+                
+                # Remover cliente do gerenciador
+                gerenciador_sessoes.remover_cliente(sessao_id)
+                print(f"🧹 Cliente removido do gerenciador")
+                
+                # Limpar arquivo de sessão para forçar novo login
+                try:
+                    import os
+                    from database import SessionLocal
+                    db_temp = SessionLocal()
+                    try:
+                        sessao_dir = ConfiguracaoService.obter_valor(db_temp, "sessao_diretorio", "./sessoes")
+                    finally:
+                        db_temp.close()
+                    db_path = f"{sessao_dir}/sessao_{sessao_id}.db"
+                    if os.path.exists(db_path):
+                        os.remove(db_path)
+                        print(f"🗑️  Arquivo de sessão removido: {db_path}")
+                except Exception as e:
+                    print(f"⚠️  Erro ao remover arquivo de sessão: {e}")
+
             @cliente.event(MessageEv)
             def on_message(client: NewClient, event: MessageEv):
                 """Evento de mensagem recebida."""
@@ -320,11 +364,18 @@ class SessaoService:
                     if hasattr(event.Info, 'IsFromMe') and event.Info.IsFromMe:
                         return
                     
-                    # Ignorar mensagens dos primeiros 30 segundos (history sync)
+                    # Ignorar mensagens dos primeiros segundos (history sync - configurável)
                     import time
+                    from config.config_service import ConfiguracaoService
+                    from database import SessionLocal
+                    db_config = SessionLocal()
+                    try:
+                        history_sync_delay = ConfiguracaoService.obter_valor(db_config, "sessao_history_sync_delay", 5)
+                    finally:
+                        db_config.close()
                     connected_at = gerenciador_sessoes.clientes.get(f"{sessao_id}_connected_at", 0)
-                    if time.time() - connected_at < 5:
-                        print(f"⏭️  Ignorando mensagem (history sync - primeiros 5s)")
+                    if time.time() - connected_at < history_sync_delay:
+                        print(f"⏭️  Ignorando mensagem (history sync - primeiros {history_sync_delay}s)")
                         return
                     
                     sender_jid = event.Info.MessageSource.Sender
@@ -442,7 +493,8 @@ class SessaoService:
             import threading
             
             # Criar cliente Neonize com banco de dados (mantém sessão)
-            db_path = f"./sessoes/sessao_{sessao_id}.db"
+            sessao_dir = ConfiguracaoService.obter_valor(db, "sessao_diretorio", "./sessoes")
+            db_path = f"{sessao_dir}/sessao_{sessao_id}.db"
             
             # Verificar se existe banco de dados salvo
             if not os.path.exists(db_path):
@@ -509,6 +561,46 @@ class SessaoService:
                 finally:
                     db_thread.close()
             
+            @cliente.event(LoggedOutEv)
+            def on_logged_out(client: NewClient, event: LoggedOutEv):
+                """Evento de logout/desconexão forçada (reconexão)."""
+                print(f"🔴 LOGOUT DETECTADO para sessão {sessao_id}")
+                print(f"📊 Razão: {event.Reason if hasattr(event, 'Reason') else 'Desconhecida'}")
+                
+                # Atualizar banco
+                from database import SessionLocal
+                db_thread = SessionLocal()
+                try:
+                    sessao_db = db_thread.query(Sessao).filter(Sessao.id == sessao_id).first()
+                    if sessao_db:
+                        sessao_db.status = "desconectado"
+                        sessao_db.qr_code = None
+                        sessao_db.qr_code_gerado_em = None
+                        db_thread.commit()
+                        print(f"✅ Sessão {sessao_id} marcada como desconectada")
+                finally:
+                    db_thread.close()
+                
+                # Remover cliente do gerenciador
+                gerenciador_sessoes.remover_cliente(sessao_id)
+                print(f"🧹 Cliente removido do gerenciador")
+                
+                # Limpar arquivo de sessão
+                try:
+                    import os
+                    from database import SessionLocal
+                    db_temp = SessionLocal()
+                    try:
+                        sessao_dir = ConfiguracaoService.obter_valor(db_temp, "sessao_diretorio", "./sessoes")
+                    finally:
+                        db_temp.close()
+                    db_path = f"{sessao_dir}/sessao_{sessao_id}.db"
+                    if os.path.exists(db_path):
+                        os.remove(db_path)
+                        print(f"🗑️  Arquivo de sessão removido: {db_path}")
+                except Exception as e:
+                    print(f"⚠️  Erro ao remover arquivo de sessão: {e}")
+
             @cliente.event(MessageEv)
             def on_message(client: NewClient, event: MessageEv):
                 """Evento de mensagem recebida."""
@@ -520,14 +612,20 @@ class SessaoService:
                         print(f"⏭️  Mensagem ignorada: IsFromMe=True")
                         return
                     
-                    # Verificar filtro de tempo
+                    # Verificar filtro de tempo (configurável)
                     import time
+                    from database import SessionLocal
+                    db_config = SessionLocal()
+                    try:
+                        history_sync_delay = ConfiguracaoService.obter_valor(db_config, "sessao_history_sync_delay", 5)
+                    finally:
+                        db_config.close()
                     connected_at = gerenciador_sessoes.clientes.get(f"{sessao_id}_connected_at", 0)
                     tempo_desde_conexao = time.time() - connected_at
-                    print(f"⏱️  Tempo desde conexão: {tempo_desde_conexao:.1f}s (limite: 5s)")
+                    print(f"⏱️  Tempo desde conexão: {tempo_desde_conexao:.1f}s (limite: {history_sync_delay}s)")
                     
-                    if tempo_desde_conexao < 5:
-                        print(f"⏭️  Mensagem ignorada: history sync ({tempo_desde_conexao:.1f}s < 5s)")
+                    if tempo_desde_conexao < history_sync_delay:
+                        print(f"⏭️  Mensagem ignorada: history sync ({tempo_desde_conexao:.1f}s < {history_sync_delay}s)")
                         return
                     
                     sender_jid = event.Info.MessageSource.Sender

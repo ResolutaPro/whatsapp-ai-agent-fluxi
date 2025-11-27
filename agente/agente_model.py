@@ -47,6 +47,8 @@ class Agente(Base):
     temperatura = Column(String(10), nullable=True)
     max_tokens = Column(String(10), nullable=True)
     top_p = Column(String(10), nullable=True)
+    frequency_penalty = Column(String(10), nullable=True)  # -2.0 a 2.0 (evita repetição)
+    presence_penalty = Column(String(10), nullable=True)   # -2.0 a 2.0 (novos tópicos)
     
     # RAG (Base de Conhecimento)
     rag_id = Column(Integer, ForeignKey("rags.id", ondelete='SET NULL'), nullable=True, index=True)

@@ -215,6 +215,11 @@
             </h2>
             
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="/mensagens/sessao/{{ sessao.id }}" class="button is-fullwidth" style="justify-content: flex-start; background: linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border: 1px solid rgba(37, 211, 102, 0.3); color: #25D366; font-weight: 600;">
+                    <span class="icon"><i class="fas fa-comments"></i></span>
+                    <span>Histórico de Mensagens</span>
+                </a>
+                
                 <a href="/agentes/sessao/{{ sessao.id }}" class="button is-fullwidth" style="justify-content: flex-start; background: linear-gradient(135deg, rgba(199, 91, 155, 0.1) 0%, rgba(91, 78, 155, 0.1) 100%); border: 1px solid rgba(199, 91, 155, 0.3); color: #C75B9B; font-weight: 600;">
                     <span class="icon"><i class="fas fa-robot"></i></span>
                     <span>Gerenciar Agentes</span>
@@ -225,7 +230,17 @@
                     <span>Editar Sessão</span>
                 </a>
                 
-                <a href="/agentes/{{ sessao.agente_ativo_id or 'novo' }}/ferramentas" class="button is-fullwidth" style="justify-content: flex-start; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #8b5cf6; font-weight: 600;">
+                <a href="/sessoes/{{ sessao.id }}/tipos-mensagem" class="button is-fullwidth" style="justify-content: flex-start; background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); color: #ec4899; font-weight: 600;">
+                    <span class="icon"><i class="fas fa-comments"></i></span>
+                    <span>Tipos de Mensagem</span>
+                </a>
+                
+                <a href="/sessoes/{{ sessao.id }}/comandos" class="button is-fullwidth" style="justify-content: flex-start; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #8b5cf6; font-weight: 600;">
+                    <span class="icon"><i class="fas fa-terminal"></i></span>
+                    <span>Comandos Personalizáveis</span>
+                </a>
+                
+                <a href="/agentes/{{ sessao.agente_ativo_id or 'novo' }}/ferramentas" class="button is-fullwidth" style="justify-content: flex-start; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; font-weight: 600;">
                     <span class="icon"><i class="fas fa-tools"></i></span>
                     <span>Configurar Ferramentas</span>
                 </a>

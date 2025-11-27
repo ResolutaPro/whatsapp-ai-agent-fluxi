@@ -378,14 +378,11 @@ Sistema de analytics e monitoramento com estatísticas de uso, performance e con
 Sistema RAG (Retrieval-Augmented Generation) com ChromaDB e embeddings para bases de conhecimento.
 
 **Principais funcionalidades:**
-- Upload de documentos (PDF, TXT, DOC, DOCX)
 - Adição de texto direto
 - Suporte a múltiplos providers (OpenAI, Cohere, HuggingFace, Google)
 - Chunking inteligente com overlap
 - Busca semântica por similaridade
 - Integração transparente com agentes
-- Métricas de uso e performance
-- Gerenciamento de chunks
 
 **[ Ver documentação completa →](rag/README.md)**
 
@@ -723,6 +720,63 @@ Cada módulo possui documentação detalhada com:
 - Exemplos práticos
 - Integrações
 - Notas técnicas
+
+## Solução de Problemas
+
+### Erro 401 - WhatsApp Desconectado
+
+Se você ver erros como:
+```
+ERROR - Error reading from websocket: websocket: close 1006 (abnormal closure): unexpected EOF
+INFO - Got 401: logged out from another device connect failure
+```
+
+**Causa**: A sessão WhatsApp foi desconectada do celular ou expirou.
+
+**Solução**:
+
+1. **Limpar sessões desconectadas**:
+```bash
+python limpar_sessoes.py
+```
+
+2. **Escolha a opção 1** (limpar apenas desconectadas)
+
+3. **Reinicie o servidor**:
+   - Pressione `Ctrl+C` para parar
+   - Execute `python main.py` novamente
+
+4. **Reconecte pelo QR Code**:
+   - Acesse `http://localhost:8001/sessoes`
+   - Clique em "Conectar" na sua sessão
+   - Escaneie o novo QR Code
+
+### Sessão Não Conecta
+
+**Problema**: QR Code não aparece ou não conecta
+
+**Soluções**:
+- Verifique se o celular está conectado à internet
+- Certifique-se que tem a versão mais recente do WhatsApp
+- Tente fechar e abrir o WhatsApp no celular
+- Execute `python limpar_sessoes.py` e reconecte
+
+### Muitos Logs de "watchfiles"
+
+**Problema**: Muitos logs de "1 change detected"
+
+**Solução**: Isso é normal durante desenvolvimento com `reload=True`. Para desabilitar:
+- Edite `main.py` linha 175
+- Altere `reload=debug` para `reload=False`
+
+### Database Locked
+
+**Problema**: Erro `database is locked`
+
+**Solução**:
+- Feche outras instâncias do Fluxi
+- Reinicie o servidor
+- Se persistir, delete `fluxi.db` e reinicie
 
 ## Licença
 

@@ -23,6 +23,8 @@ class LLMIntegrationService:
         temperatura: float = 0.7,
         max_tokens: int = 2000,
         top_p: float = 1.0,
+        frequency_penalty: float = 0.0,
+        presence_penalty: float = 0.0,
         tools: Optional[List[Dict]] = None,
         stream: bool = False
     ) -> Dict[str, Any]:
@@ -37,6 +39,8 @@ class LLMIntegrationService:
             temperatura: Temperatura para geração
             max_tokens: Máximo de tokens
             top_p: Top P para amostragem
+            frequency_penalty: Penalidade de frequência (-2.0 a 2.0)
+            presence_penalty: Penalidade de presença (-2.0 a 2.0)
             tools: Lista de ferramentas disponíveis
             stream: Se deve usar streaming
             
@@ -56,12 +60,13 @@ class LLMIntegrationService:
                 # Usar provedor local via llm_providers
                 resultado = await LLMIntegrationService._usar_provedor_local(
                     db, provedor_info, messages, modelo, temperatura, 
-                    max_tokens, top_p, tools, stream
+                    max_tokens, top_p, frequency_penalty, presence_penalty, tools, stream
                 )
             elif provedor_info["tipo"] == "openrouter":
                 # Usar OpenRouter diretamente
                 resultado = await LLMIntegrationService._usar_openrouter(
-                    db, messages, modelo, temperatura, max_tokens, top_p, tools, stream
+                    db, messages, modelo, temperatura, max_tokens, top_p, 
+                    frequency_penalty, presence_penalty, tools, stream
                 )
             else:
                 raise ValueError(f"Tipo de provedor não suportado: {provedor_info['tipo']}")
@@ -86,7 +91,8 @@ class LLMIntegrationService:
                 print(f"⚠️ Erro com provedor {provedor_info['tipo']}, tentando OpenRouter: {e}")
                 try:
                     resultado = await LLMIntegrationService._usar_openrouter(
-                        db, messages, modelo, temperatura, max_tokens, top_p, tools, stream
+                        db, messages, modelo, temperatura, max_tokens, top_p,
+                        frequency_penalty, presence_penalty, tools, stream
                     )
                     resultado["provedor_usado"] = "openrouter_fallback"
                     resultado["erro_original"] = str(e)
@@ -105,28 +111,14 @@ class LLMIntegrationService:
     ) -> Dict[str, Any]:
         """Determina qual provedor usar baseado no modelo e configurações."""
         
-        # 1. Verificar se o modelo é específico do OpenRouter (Gemini, Claude, etc.)
-        modelos_openrouter = [
-            "google/gemini", "anthropic/claude", "openai/gpt", 
-            "mistralai/mistral", "cohere/command"
-        ]
+        # 1. Verificar configuração global primeiro
+        provedor_padrao = ConfiguracaoService.obter_valor(db, "llm_provedor_padrao", "auto")
         
-        if any(modelo.startswith(prefix) for prefix in modelos_openrouter):
-            return {"tipo": "openrouter", "motivo": "modelo_especifico_openrouter"}
-        
-        # 2. Verificar configuração do agente (se houver)
-        if agente_id:
-            # TODO: Implementar configuração por agente
-            pass
-        
-        # 3. Verificar configuração global
-        provedor_padrao = ConfiguracaoService.obter_valor(db, "llm_provedor_padrao", "openrouter")
-        
+        # 2. Se configurado para local, tentar usar provedor local específico
         if provedor_padrao == "local":
-            # Verificar se há provedor local configurado
             provedor_local_id = ConfiguracaoService.obter_valor(db, "llm_provedor_local_id")
             if provedor_local_id:
-                provedor = ProvedorLLMService.obter_por_id(db, provedor_local_id)
+                provedor = ProvedorLLMService.obter_por_id(db, int(provedor_local_id))
                 if provedor and provedor.ativo:
                     return {
                         "tipo": "local",
@@ -135,14 +127,46 @@ class LLMIntegrationService:
                         "motivo": "configuracao_local"
                     }
         
-        # 4. Fallback para OpenRouter (apenas se disponível)
+        # 3. Se configurado para OpenRouter E tem chave, usar
+        if provedor_padrao == "openrouter" and LLMIntegrationService._openrouter_disponivel(db):
+            return {"tipo": "openrouter", "motivo": "configuracao_openrouter"}
+        
+        # 4. Tentar encontrar qualquer provedor disponível (modo auto ou fallback)
+        # 4.1 Primeiro verificar provedores locais ativos
+        provedores_ativos = ProvedorLLMService.listar_ativos(db)
+        if provedores_ativos:
+            provedor = provedores_ativos[0]  # Usar primeiro provedor ativo
+            print(f"🔄 Usando provedor local: {provedor.nome} ({provedor.base_url})")
+            return {
+                "tipo": "local",
+                "id": provedor.id,
+                "provedor": provedor,
+                "motivo": "auto_local"
+            }
+        
+        # 4.2 Verificar se modelo é específico do OpenRouter (Gemini, Claude, etc.)
+        modelos_openrouter = [
+            "google/gemini", "anthropic/claude", "openai/gpt", 
+            "mistralai/mistral", "cohere/command"
+        ]
+        
+        if any(modelo.startswith(prefix) for prefix in modelos_openrouter):
+            if LLMIntegrationService._openrouter_disponivel(db):
+                return {"tipo": "openrouter", "motivo": "modelo_especifico_openrouter"}
+            else:
+                raise ValueError(
+                    f"Modelo '{modelo}' requer OpenRouter, mas a API Key não está configurada. "
+                    "Configure a chave em Configurações ou use um modelo local."
+                )
+        
+        # 4.3 Fallback para OpenRouter se disponível
         if LLMIntegrationService._openrouter_disponivel(db):
             return {"tipo": "openrouter", "motivo": "fallback_padrao"}
         
-        # 5. Se não há provedor disponível, retornar erro
+        # 5. Nenhum provedor disponível
         raise ValueError(
-            "Nenhum provedor LLM configurado. "
-            "Configure um provedor local ou adicione sua chave de API do OpenRouter nas configurações."
+            "Nenhum provedor LLM disponível. "
+            "Configure um provedor local em 'Provedores LLM' ou adicione sua chave de API do OpenRouter em 'Configurações'."
         )
 
     @staticmethod
@@ -160,6 +184,8 @@ class LLMIntegrationService:
         temperatura: float,
         max_tokens: int,
         top_p: float,
+        frequency_penalty: float,
+        presence_penalty: float,
         tools: Optional[List[Dict]],
         stream: bool
     ) -> Dict[str, Any]:
@@ -172,7 +198,9 @@ class LLMIntegrationService:
             configuracao=ConfiguracaoProvedor(
                 temperatura=temperatura,
                 max_tokens=max_tokens,
-                top_p=top_p
+                top_p=top_p,
+                frequency_penalty=frequency_penalty,
+                presence_penalty=presence_penalty
             ),
             stream=stream
         )
@@ -200,16 +228,14 @@ class LLMIntegrationService:
         temperatura: float,
         max_tokens: int,
         top_p: float,
+        frequency_penalty: float,
+        presence_penalty: float,
         tools: Optional[List[Dict]],
         stream: bool
     ) -> Dict[str, Any]:
         """Usa OpenRouter diretamente."""
         
-        # Obter configurações
-        api_key = ConfiguracaoService.obter_valor(db, "openrouter_api_key")
-        if not api_key:
-            raise ValueError("API Key do OpenRouter não configurada")
-        
+
         # Preparar payload
         payload = {
             "model": modelo,
@@ -217,6 +243,8 @@ class LLMIntegrationService:
             "temperature": temperatura,
             "max_tokens": max_tokens,
             "top_p": top_p,
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
             "stream": stream
         }
         
@@ -288,10 +316,19 @@ class LLMIntegrationService:
 
     @staticmethod
     def configurar_provedor_padrao(db: Session, tipo: str, provedor_id: Optional[int] = None):
-        """Configura o provedor padrão do sistema."""
+        """
+        Configura o provedor padrão do sistema.
+        
+        Args:
+            tipo: "auto", "local" ou "openrouter"
+            provedor_id: ID do provedor local (obrigatório se tipo == "local")
+        """
+        if tipo not in ["auto", "local", "openrouter"]:
+            raise ValueError(f"Tipo de provedor inválido: {tipo}. Use 'auto', 'local' ou 'openrouter'.")
+        
         ConfiguracaoService.definir_valor(db, "llm_provedor_padrao", tipo)
         
         if tipo == "local" and provedor_id:
-            ConfiguracaoService.definir_valor(db, "llm_provedor_local_id", provedor_id)
-        elif tipo == "openrouter":
+            ConfiguracaoService.definir_valor(db, "llm_provedor_local_id", str(provedor_id))
+        elif tipo in ["openrouter", "auto"]:
             ConfiguracaoService.definir_valor(db, "llm_provedor_local_id", None)

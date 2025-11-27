@@ -14,6 +14,7 @@ from ferramenta.ferramenta_service import FerramentaService
 from ferramenta.ferramenta_schema import FerramentaCriar
 from ferramenta.ferramenta_model import ToolType, ToolScope, OutputDestination, ChannelType
 from ferramenta.ferramenta_variavel_service import FerramentaVariavelService
+from config.config_service import ConfiguracaoService
 
 router = APIRouter(prefix="/ferramentas/wizard", tags=["Wizard Ferramentas"])
 templates = Jinja2Templates(directory="templates")
@@ -308,17 +309,20 @@ async def wizard_step4_testar(request: Request, db: Session = Depends(get_db)):
                             _test_results_cache['last_execution_id'] = execution_id
                             return RedirectResponse(url="/ferramentas/wizard/step4", status_code=303)
                     
+                    # Obter timeout de teste configurado
+                    timeout_teste = ConfiguracaoService.obter_valor(db, "ferramenta_timeout_teste", 10)
+                    
                     async with httpx.AsyncClient() as client:
                         if method == "GET":
-                            response = await client.get(url, headers=headers, params=query_params, timeout=10.0)
+                            response = await client.get(url, headers=headers, params=query_params, timeout=float(timeout_teste))
                         elif method == "POST":
-                            response = await client.post(url, headers=headers, params=query_params, json=json_body, timeout=10.0)
+                            response = await client.post(url, headers=headers, params=query_params, json=json_body, timeout=float(timeout_teste))
                         elif method == "PUT":
-                            response = await client.put(url, headers=headers, params=query_params, json=json_body, timeout=10.0)
+                            response = await client.put(url, headers=headers, params=query_params, json=json_body, timeout=float(timeout_teste))
                         elif method == "PATCH":
-                            response = await client.patch(url, headers=headers, params=query_params, json=json_body, timeout=10.0)
+                            response = await client.patch(url, headers=headers, params=query_params, json=json_body, timeout=float(timeout_teste))
                         elif method == "DELETE":
-                            response = await client.delete(url, headers=headers, params=query_params, timeout=10.0)
+                            response = await client.delete(url, headers=headers, params=query_params, timeout=float(timeout_teste))
                         else:
                             raise ValueError(f"Método {method} não suportado")
                         
@@ -369,7 +373,8 @@ async def wizard_step4_testar(request: Request, db: Session = Depends(get_db)):
         
     except httpx.TimeoutException:
         print(f"[{execution_id}] ❌ TimeoutException")
-        _test_results_cache['last_test_result'] = {"erro": "Timeout na requisição (10s)"}
+        timeout_teste = ConfiguracaoService.obter_valor(db, "ferramenta_timeout_teste", 10)
+        _test_results_cache['last_test_result'] = {"erro": f"Timeout na requisição ({timeout_teste}s)"}
         _test_results_cache['last_execution_id'] = execution_id
     except Exception as e:
         print(f"[{execution_id}] ❌ Erro: {type(e).__name__}: {e}")

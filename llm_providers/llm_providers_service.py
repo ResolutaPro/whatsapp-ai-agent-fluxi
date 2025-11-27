@@ -109,9 +109,16 @@ class ProvedorLLMService:
             if provedor.api_key:
                 headers["Authorization"] = f"Bearer {provedor.api_key}"
             
+            base_url = str(provedor.base_url).rstrip('/')
+            # Verificar se base_url já contém /v1 para evitar duplicação
+            if base_url.endswith('/v1') or '/v1/' in base_url:
+                models_url = f"{base_url}/models"
+            else:
+                models_url = f"{base_url}/v1/models"
+            
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(
-                    f"{provedor.base_url}/v1/models",
+                    models_url,
                     headers=headers
                 )
                 response.raise_for_status()
@@ -152,8 +159,16 @@ class ProvedorLLMService:
                 
                 # Tentar detectar tipo de provedor automaticamente
                 # Primeiro tenta OpenAI-compatível (LM Studio, llama.cpp, etc.)
-                url_openai = f"{base_url}/v1/models"
-                url_ollama = f"{base_url}/api/tags"
+                # Verificar se base_url já contém os caminhos para evitar duplicação
+                if base_url.endswith('/v1') or '/v1/' in base_url:
+                    url_openai = f"{base_url}/models"
+                else:
+                    url_openai = f"{base_url}/v1/models"
+                
+                if base_url.endswith('/api') or '/api/' in base_url:
+                    url_ollama = f"{base_url}/tags"
+                else:
+                    url_ollama = f"{base_url}/api/tags"
                 
                 response = None
                 tipo_detectado = None
@@ -310,7 +325,11 @@ class ProvedorLLMService:
                 response = None
                 
                 # Primeiro tenta endpoint OpenAI-compatível
-                url_openai = f"{base_url}/v1/chat/completions"
+                # Verificar se base_url já contém /v1 para evitar duplicação
+                if base_url.endswith('/v1') or '/v1/' in base_url:
+                    url_openai = f"{base_url}/chat/completions"
+                else:
+                    url_openai = f"{base_url}/v1/chat/completions"
                 payload_openai = {
                     "model": requisicao.modelo,
                     "messages": requisicao.mensagens,

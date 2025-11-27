@@ -112,7 +112,7 @@ if resultado.sucesso:
 ```python
 from llm_providers.llm_providers_schema import RequisicaoLLM, ConfiguracaoProvedor
 
-# Preparar requisição
+# Preparar requisição (texto simples)
 requisicao = RequisicaoLLM(
     mensagens=[{"role": "user", "content": "Olá!"}],
     modelo="llama3.2",
@@ -126,6 +126,25 @@ requisicao = RequisicaoLLM(
 resposta = await ProvedorLLMService.enviar_requisicao(db, provedor_id, requisicao)
 print(resposta.conteudo)
 ```
+
+### Enviar Requisição com Imagem (Multimodal)
+
+```python
+# Preparar requisição com imagem
+requisicao = RequisicaoLLM(
+    mensagens=[{
+        "role": "user", 
+        "content": [
+            {"type": "text", "text": "O que você vê nesta imagem?"},
+            {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}}
+        ]
+    }],
+    modelo="llama3.2-vision",
+    configuracao=ConfiguracaoProvedor(temperatura=0.7)
+)
+```
+
+> **Nota**: O campo `content` aceita string (texto) ou lista (multimodal com imagens).
 
 ## Integração com OpenAI
 

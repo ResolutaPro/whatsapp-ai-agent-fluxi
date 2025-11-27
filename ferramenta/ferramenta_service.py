@@ -9,6 +9,7 @@ import httpx
 from datetime import datetime
 from ferramenta.ferramenta_model import Ferramenta, ToolType, ToolScope
 from ferramenta.ferramenta_schema import FerramentaCriar, FerramentaAtualizar
+from config.config_service import ConfiguracaoService
 
 
 class FerramentaService:
@@ -161,17 +162,20 @@ class FerramentaService:
                 query_params = parsed.get('query_params', {})
                 body = parsed.get('body')
                 
+                # Obter timeout configurado
+                timeout_http = ConfiguracaoService.obter_valor(db, "ferramenta_timeout_http", 30) if db else 30.0
+                
                 async with httpx.AsyncClient() as client:
                     if method == "GET":
-                        response = await client.get(url, headers=headers, params=query_params, timeout=30.0)
+                        response = await client.get(url, headers=headers, params=query_params, timeout=float(timeout_http))
                     elif method == "POST":
-                        response = await client.post(url, headers=headers, params=query_params, json=json.loads(body) if body else None, timeout=30.0)
+                        response = await client.post(url, headers=headers, params=query_params, json=json.loads(body) if body else None, timeout=float(timeout_http))
                     elif method == "PUT":
-                        response = await client.put(url, headers=headers, params=query_params, json=json.loads(body) if body else None, timeout=30.0)
+                        response = await client.put(url, headers=headers, params=query_params, json=json.loads(body) if body else None, timeout=float(timeout_http))
                     elif method == "PATCH":
-                        response = await client.patch(url, headers=headers, params=query_params, json=json.loads(body) if body else None, timeout=30.0)
+                        response = await client.patch(url, headers=headers, params=query_params, json=json.loads(body) if body else None, timeout=float(timeout_http))
                     elif method == "DELETE":
-                        response = await client.delete(url, headers=headers, params=query_params, timeout=30.0)
+                        response = await client.delete(url, headers=headers, params=query_params, timeout=float(timeout_http))
                     else:
                         return {"erro": f"Método HTTP '{method}' não suportado"}
                     
@@ -457,7 +461,7 @@ class FerramentaService:
             if "url" in resultado:
                 # Baixar imagem da URL
                 async with httpx.AsyncClient() as client:
-                    response = await client.get(resultado["url"], timeout=30.0)
+                    response = await client.get(resultado["url"], timeout=30.0)  # Imagens usam timeout menor
                     if response.status_code == 200:
                         imagem_data = response.content
             
@@ -504,7 +508,7 @@ class FerramentaService:
             
             if "url" in resultado:
                 async with httpx.AsyncClient() as client:
-                    response = await client.get(resultado["url"], timeout=30.0)
+                    response = await client.get(resultado["url"], timeout=30.0)  # Áudio usa timeout menor
                     if response.status_code == 200:
                         audio_data = response.content
             
@@ -548,8 +552,15 @@ class FerramentaService:
             caption = resultado.get("caption", "")
             
             if "url" in resultado:
+                # Timeout maior para vídeos (configurável)
+                from database import SessionLocal
+                db_temp = SessionLocal()
+                try:
+                    timeout_download = ConfiguracaoService.obter_valor(db_temp, "ferramenta_timeout_download", 60)
+                finally:
+                    db_temp.close()
                 async with httpx.AsyncClient() as client:
-                    response = await client.get(resultado["url"], timeout=60.0)
+                    response = await client.get(resultado["url"], timeout=float(timeout_download))
                     if response.status_code == 200:
                         video_data = response.content
             
@@ -593,8 +604,15 @@ class FerramentaService:
             caption = resultado.get("caption", "")
             
             if "url" in resultado:
+                # Timeout maior para documentos (configurável)
+                from database import SessionLocal
+                db_temp = SessionLocal()
+                try:
+                    timeout_download = ConfiguracaoService.obter_valor(db_temp, "ferramenta_timeout_download", 60)
+                finally:
+                    db_temp.close()
                 async with httpx.AsyncClient() as client:
-                    response = await client.get(resultado["url"], timeout=60.0)
+                    response = await client.get(resultado["url"], timeout=float(timeout_download))
                     if response.status_code == 200:
                         doc_data = response.content
             

@@ -101,10 +101,11 @@ class AgenteService:
     def atualizar_ferramentas(db: Session, agente_id: int, ferramentas_ids: List[int]):
         """
         Atualiza as ferramentas de um agente.
-        Máximo de 20 ferramentas por agente.
+        Limite configurável via 'agente_max_ferramentas'.
         """
-        if len(ferramentas_ids) > 20:
-            raise ValueError("Um agente pode ter no máximo 20 ferramentas ativas")
+        max_ferramentas = ConfiguracaoService.obter_valor(db, "agente_max_ferramentas", 20)
+        if len(ferramentas_ids) > max_ferramentas:
+            raise ValueError(f"Um agente pode ter no máximo {max_ferramentas} ferramentas ativas")
         
         db_agente = AgenteService.obter_por_id(db, agente_id)
         if not db_agente:
@@ -191,9 +192,12 @@ class AgenteService:
         
         agente = AgenteService.criar(db, agente_data)
         
-        # Associar ferramentas padrão (obter_data_hora_atual e calcular)
+        # Associar ferramentas padrão (configurável)
+        nomes_ferramentas_padrao = ConfiguracaoService.obter_valor(
+            db, "agente_ferramentas_padrao", ["obter_data_hora_atual", "calcular"]
+        )
         ferramentas_padrao = db.query(Ferramenta).filter(
-            Ferramenta.nome.in_(["obter_data_hora_atual", "calcular"])
+            Ferramenta.nome.in_(nomes_ferramentas_padrao)
         ).all()
         
         if ferramentas_padrao:
@@ -226,44 +230,53 @@ class AgenteService:
         historico = []
         
         # Adicionar mensagens anteriores (invertido para ordem cronológica)
-        for msg in reversed(mensagens[:10]):  # Últimas 10 mensagens
+        for msg in reversed(mensagens[:10]):
             if msg.id == mensagem_atual.id:
                 continue
             
-            # Mensagem do usuário
-            if msg.direcao == "recebida":
-                conteudo = []
-                
-                # Adicionar texto
-                if msg.conteudo_texto:
-                    conteudo.append({
-                        "type": "text",
-                        "text": msg.conteudo_texto
-                    })
-                
-                # Adicionar imagem se houver
-                if msg.tipo == "imagem" and msg.conteudo_imagem_base64:
-                    mime_type = msg.conteudo_mime_type or "image/jpeg"
-                    data_url = f"data:{mime_type};base64,{msg.conteudo_imagem_base64}"
-                    conteudo.append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": data_url
-                        }
-                    })
-                
-                if conteudo:
-                    historico.append({
-                        "role": "user",
-                        "content": conteudo if len(conteudo) > 1 else conteudo[0]["text"]
-                    })
+            # Só processar mensagens recebidas
+            if msg.direcao != "recebida":
+                continue
             
-            # Resposta do assistente
-            elif msg.direcao == "enviada" and msg.resposta_texto:
-                historico.append({
-                    "role": "assistant",
-                    "content": msg.resposta_texto
+            # Mensagem do usuário
+            conteudo = []
+            
+            # Adicionar texto
+            if msg.conteudo_texto:
+                conteudo.append({
+                    "type": "text",
+                    "text": msg.conteudo_texto
                 })
+            
+            # Adicionar imagem se houver
+            if msg.tipo == "imagem" and msg.conteudo_imagem_base64:
+                mime_type = msg.conteudo_mime_type or "image/jpeg"
+                data_url = f"data:{mime_type};base64,{msg.conteudo_imagem_base64}"
+                conteudo.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": data_url
+                    }
+                })
+            
+            if conteudo:
+                # Se só tem um item e é texto, usar string simples
+                if len(conteudo) == 1 and conteudo[0].get("type") == "text":
+                    content = conteudo[0]["text"]
+                else:
+                    content = conteudo
+                
+                historico.append({
+                    "role": "user",
+                    "content": content
+                })
+                
+                # Adicionar resposta do assistente (se houver)
+                if msg.resposta_texto:
+                    historico.append({
+                        "role": "assistant",
+                        "content": msg.resposta_texto
+                    })
         
         return historico
 
@@ -314,6 +327,12 @@ class AgenteService:
         top_p = float(agente.top_p or ConfiguracaoService.obter_valor(
             db, "openrouter_top_p", "1.0"
         ))
+        frequency_penalty = float(agente.frequency_penalty or ConfiguracaoService.obter_valor(
+            db, "openrouter_frequency_penalty", "0.0"
+        ))
+        presence_penalty = float(agente.presence_penalty or ConfiguracaoService.obter_valor(
+            db, "openrouter_presence_penalty", "0.0"
+        ))
         
         # Construir system prompt
         system_prompt = AgenteService.construir_system_prompt(agente)
@@ -349,11 +368,17 @@ class AgenteService:
             {"role": "system", "content": system_prompt}
         ]
         messages.extend(historico)
+        # Determinar content da mensagem atual
+        if not conteudo_atual:
+            content_atual = "..."
+        elif len(conteudo_atual) == 1 and conteudo_atual[0].get("type") == "text":
+            content_atual = conteudo_atual[0]["text"]
+        else:
+            content_atual = conteudo_atual
+        
         messages.append({
             "role": "user",
-            "content": conteudo_atual if len(conteudo_atual) > 1 else (
-                conteudo_atual[0]["text"] if conteudo_atual else "..."
-            )
+            "content": content_atual
         })
         
         # Buscar ferramentas ativas do agente
@@ -418,7 +443,7 @@ class AgenteService:
         tokens_output_total = 0
         ferramentas_usadas = []
         texto_resposta_final = ""
-        max_iteracoes = 10
+        max_iteracoes = ConfiguracaoService.obter_valor(db, "agente_max_iteracoes_loop", 10)
         iteracao = 0
         
         # Loop principal de processamento
@@ -437,6 +462,8 @@ class AgenteService:
                     temperatura=temperatura,
                     max_tokens=max_tokens,
                     top_p=top_p,
+                    frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
                     tools=tools,
                     stream=False
                 )
@@ -501,7 +528,8 @@ class AgenteService:
                             from rag.rag_metrica_service import RAGMetricaService
                             try:
                                 query = args_dict.get("query", "")
-                                num_resultados = args_dict.get("num_resultados", 3)
+                                num_resultados_padrao = ConfiguracaoService.obter_valor(db, "agente_rag_resultados_padrao", 3)
+                                num_resultados = args_dict.get("num_resultados", num_resultados_padrao)
                                 
                                 # Medir tempo de busca
                                 tempo_inicio = time.time()

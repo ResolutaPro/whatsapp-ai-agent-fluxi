@@ -14,13 +14,12 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/sessao/{sessao_id}", response_class=HTMLResponse)
-def pagina_mensagens_sessao(
+def pagina_historico_sessao(
     sessao_id: int,
     request: Request,
-    limite: int = Query(default=100, le=500),
     db: Session = Depends(get_db)
 ):
-    """Página de mensagens de uma sessão."""
+    """Página de histórico de conversas de uma sessão."""
     sessao = SessaoService.obter_por_id(db, sessao_id)
     if not sessao:
         return templates.TemplateResponse("shared/erro.html", {
@@ -29,26 +28,28 @@ def pagina_mensagens_sessao(
             "titulo": "Erro"
         })
     
-    mensagens = MensagemService.listar_por_sessao(db, sessao_id, limite)
-    clientes = MensagemService.obter_clientes_unicos(db, sessao_id)
+    # Obter resumo de todas as conversas
+    conversas = MensagemService.obter_conversas_resumo(db, sessao_id)
+    total_mensagens = MensagemService.contar_mensagens_por_sessao(db, sessao_id)
     
-    return templates.TemplateResponse("mensagens.html", {
+    return templates.TemplateResponse("mensagem/historico.html", {
         "request": request,
         "sessao": sessao,
-        "mensagens": mensagens,
-        "clientes": clientes,
-        "titulo": f"Mensagens - {sessao.nome}"
+        "conversas": conversas,
+        "total_mensagens": total_mensagens,
+        "total_conversas": len(conversas),
+        "titulo": f"Histórico - {sessao.nome}"
     })
 
 
-@router.get("/sessao/{sessao_id}/cliente/{telefone}", response_class=HTMLResponse)
+@router.get("/sessao/{sessao_id}/conversa/{telefone}", response_class=HTMLResponse)
 def pagina_conversa_cliente(
     sessao_id: int,
     telefone: str,
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """Página de conversa com um cliente específico."""
+    """Página de conversa com um cliente específico (estilo chat)."""
     sessao = SessaoService.obter_por_id(db, sessao_id)
     if not sessao:
         return templates.TemplateResponse("shared/erro.html", {
@@ -57,12 +58,22 @@ def pagina_conversa_cliente(
             "titulo": "Erro"
         })
     
-    mensagens = MensagemService.listar_por_cliente(db, sessao_id, telefone, limite=100)
+    # Listar mensagens em ordem cronológica (mais antigas primeiro)
+    mensagens = MensagemService.listar_conversa_completa(db, sessao_id, telefone, limite=200)
     
-    return templates.TemplateResponse("conversa.html", {
+    # Obter nome do cliente (se disponível)
+    nome_cliente = None
+    if mensagens:
+        for msg in mensagens:
+            if msg.nome_cliente:
+                nome_cliente = msg.nome_cliente
+                break
+    
+    return templates.TemplateResponse("mensagem/conversa.html", {
         "request": request,
         "sessao": sessao,
-        "telefone_cliente": telefone,
+        "telefone": telefone,
+        "nome_cliente": nome_cliente,
         "mensagens": mensagens,
-        "titulo": f"Conversa com {telefone}"
+        "titulo": f"Conversa - {nome_cliente or telefone}"
     })

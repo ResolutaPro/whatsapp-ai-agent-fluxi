@@ -38,6 +38,10 @@ def setup_logging():
     rag_logger = logging.getLogger('rag')
     rag_logger.setLevel(logging.DEBUG)
     
+    # Silenciar logs verbosos do watchfiles
+    logging.getLogger('watchfiles').setLevel(logging.WARNING)
+    logging.getLogger('watchfiles.main').setLevel(logging.WARNING)
+    
     # Log de início
     logger.info("=" * 50)
     logger.info("SISTEMA DE LOGGING INICIADO")
