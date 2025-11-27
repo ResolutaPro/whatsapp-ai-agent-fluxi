@@ -84,6 +84,44 @@ Exemplos de MCPs que você pode criar:
 - Controle de dispositivos IoT
 - Acesso a APIs internas da empresa
 
+#### Exemplo: MCP de Dieta
+
+O projeto inclui um exemplo funcional em `exemplo_mcp/dieta_mcp.py`:
+
+**1. Inicie o servidor MCP:**
+```bash
+cd exemplo_mcp
+python dieta_mcp.py
+```
+
+**2. Configure no Fluxi:**
+
+Acesse `http://localhost:8001/mcp/agente/{id}/json-config` e adicione:
+
+```json
+{
+  "mcpServers": {
+    "dieta": {
+      "serverUrl": "http://localhost:8002/sse"
+    }
+  }
+}
+```
+
+**3. Use pelo WhatsApp:**
+```
+Você: Registra meu almoço: arroz, feijão e frango, 650 calorias
+IA: Refeição registrada! Almoço: arroz, feijão e frango (650 kcal)
+
+Você: Quanto já comi hoje?
+IA: TOTAL DO DIA: 1200 kcal
+
+Você: Como estou na meta?
+IA: Consumido: 60% da meta. Restante: 800 kcal
+```
+
+Veja mais detalhes em [`exemplo_mcp/README.md`](exemplo_mcp/README.md)
+
 ### Via API REST (Ferramentas)
 
 ```

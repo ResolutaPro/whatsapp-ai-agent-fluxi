@@ -97,6 +97,7 @@ class RequisicaoLLM(BaseModel):
     mensagens: List[Dict[str, Any]] = Field(..., description="Lista de mensagens")
     modelo: str = Field(..., description="Nome do modelo")
     configuracao: Optional[ConfiguracaoProvedor] = Field(default=None, description="Configurações específicas")
+    tools: Optional[List[Dict[str, Any]]] = Field(default=None, description="Ferramentas disponíveis para o LLM")
     stream: bool = Field(default=True, description="Se deve usar streaming")
 
 
@@ -107,6 +108,8 @@ class RespostaLLM(BaseModel):
     tokens_usados: Optional[int] = Field(None, description="Número de tokens usados")
     tempo_geracao_ms: Optional[float] = Field(None, description="Tempo de geração em ms")
     finalizado: bool = Field(default=True, description="Se a resposta foi finalizada")
+    tool_calls: Optional[List[Dict[str, Any]]] = Field(None, description="Chamadas de ferramentas")
+    finish_reason: Optional[str] = Field(None, description="Motivo de finalização")
 
 
 class EstatisticasProvedor(BaseModel):

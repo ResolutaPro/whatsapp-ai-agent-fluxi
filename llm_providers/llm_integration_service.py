@@ -191,6 +191,10 @@ class LLMIntegrationService:
     ) -> Dict[str, Any]:
         """Usa um provedor local via llm_providers."""
         
+        # Log de debug para tools
+        if tools:
+            print(f"🔧 [LLM_LOCAL] Passando {len(tools)} tools para o provedor local")
+        
         # Preparar requisição
         requisicao = RequisicaoLLM(
             mensagens=messages,
@@ -202,6 +206,7 @@ class LLMIntegrationService:
                 frequency_penalty=frequency_penalty,
                 presence_penalty=presence_penalty
             ),
+            tools=tools,  # Passar tools para o provedor local
             stream=stream
         )
         
@@ -210,6 +215,10 @@ class LLMIntegrationService:
             db, provedor_info["id"], requisicao
         )
         
+        # Log de debug
+        if resposta.tool_calls:
+            print(f"🔧 [LLM_LOCAL] Resposta contém {len(resposta.tool_calls)} tool_calls")
+        
         # Converter para formato padrão
         return {
             "conteudo": resposta.conteudo,
@@ -217,6 +226,8 @@ class LLMIntegrationService:
             "tokens_input": None,  # Provedores locais podem não retornar
             "tokens_output": resposta.tokens_usados,
             "tempo_geracao_ms": resposta.tempo_geracao_ms,
+            "tool_calls": resposta.tool_calls,
+            "finish_reason": resposta.finish_reason,
             "finalizado": resposta.finalizado
         }
 
@@ -250,6 +261,7 @@ class LLMIntegrationService:
         
         if tools:
             payload["tools"] = tools
+            print(f"🔧 [OPENROUTER] Enviando {len(tools)} tools para API")
         
         # Fazer requisição
         async with httpx.AsyncClient() as client:

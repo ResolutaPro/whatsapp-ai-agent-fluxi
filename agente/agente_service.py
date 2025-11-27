@@ -212,6 +212,16 @@ class AgenteService:
         Constrói o system prompt baseado na configuração do agente.
         Segue o padrão definido em agente.md
         """
+        # Instrução fixa para priorizar tools
+        instrucao_tools = """
+IMPORTANTE - USO DE FERRAMENTAS:
+Você tem acesso a ferramentas (tools) que podem executar ações reais.
+SEMPRE verifique se existe uma ferramenta disponível para resolver a tarefa do usuário.
+Se existir uma ferramenta adequada, USE-A OBRIGATORIAMENTE antes de responder.
+Não tente responder com conhecimento próprio se houver uma tool que pode buscar dados reais.
+Priorize SEMPRE o uso de tools para garantir respostas precisas e atualizadas.
+"""
+        
         return (
             f"Você é: {agente.agente_papel}.\n"
             f"Objetivo: {agente.agente_objetivo}.\n"
@@ -219,7 +229,8 @@ class AgenteService:
             f"Tarefa: {agente.agente_tarefa}.\n"
             f"Objetivo explícito: {agente.agente_objetivo_explicito}.\n"
             f"Público/usuário-alvo: {agente.agente_publico}.\n"
-            f"Restrições e políticas: {agente.agente_restricoes}."
+            f"Restrições e políticas: {agente.agente_restricoes}.\n"
+            f"{instrucao_tools}"
         )
 
     @staticmethod
@@ -408,7 +419,7 @@ class AgenteService:
                     tools = []
                 tool_openai = MCPService.converter_mcp_tool_para_openai(mcp_client, mcp_tool)
                 tools.append(tool_openai)
-        
+
         # Adicionar ferramenta de busca RAG se o agente tiver treinamento vinculado
         if agente.rag_id:
             if tools is None:
@@ -467,7 +478,7 @@ class AgenteService:
                     tools=tools,
                     stream=False
                 )
-                
+                print(resultado)
                 # Extrair dados da resposta
                 message_response = {
                     "role": "assistant",
@@ -490,7 +501,7 @@ class AgenteService:
                 
                 # Verificar se há tool calls
                 tool_calls = message_response.get("tool_calls")
-                
+               
                 if tool_calls and finish_reason == "tool_calls":
                     print(f"🔧 [AGENTE] LLM chamou {len(tool_calls)} tool(s)")
                     # Processar todas as ferramentas em paralelo

@@ -336,6 +336,11 @@ class ProvedorLLMService:
                     "stream": requisicao.stream
                 }
                 
+                # Adicionar tools se disponíveis
+                if requisicao.tools:
+                    payload_openai["tools"] = requisicao.tools
+                    print(f"🔧 [PROVEDOR_LOCAL] Enviando {len(requisicao.tools)} tools para API OpenAI-compatível")
+                
                 if requisicao.configuracao:
                     payload_openai.update({
                         "temperature": requisicao.configuracao.temperatura,
@@ -360,6 +365,11 @@ class ProvedorLLMService:
                         "stream": requisicao.stream
                     }
                     
+                    # Adicionar tools para Ollama
+                    if requisicao.tools:
+                        payload_ollama["tools"] = requisicao.tools
+                        print(f"🔧 [PROVEDOR_LOCAL] Enviando {len(requisicao.tools)} tools para API Ollama")
+                    
                     if requisicao.configuracao:
                         payload_ollama["options"] = {
                             "temperature": requisicao.configuracao.temperatura,
@@ -383,22 +393,37 @@ class ProvedorLLMService:
                     data = response.json()
                     
                     # Extrair resposta baseado no tipo
+                    tool_calls = None
+                    finish_reason = None
+                    
                     if tipo_detectado == "ollama":
-                        conteudo = data.get("message", {}).get("content", "")
+                        message = data.get("message", {})
+                        conteudo = message.get("content", "")
                         tokens_usados = data.get("eval_count")
+                        tool_calls = message.get("tool_calls")
+                        finish_reason = data.get("done_reason")
                     else:
                         # OpenAI-compatível
-                        conteudo = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                        choice = data.get("choices", [{}])[0]
+                        message = choice.get("message", {})
+                        conteudo = message.get("content", "")
                         tokens_usados = data.get("usage", {}).get("total_tokens")
+                        tool_calls = message.get("tool_calls")
+                        finish_reason = choice.get("finish_reason")
+                    
+                    if tool_calls:
+                        print(f"🔧 [PROVEDOR_LOCAL] Resposta contém {len(tool_calls)} tool_calls")
 
                     # Atualizar estatísticas
                     ProvedorLLMService._atualizar_estatisticas(db, provedor_id, True, tempo_geracao)
 
                     return RespostaLLM(
-                        conteudo=conteudo,
+                        conteudo=conteudo or "",
                         modelo=requisicao.modelo,
                         tokens_usados=tokens_usados,
-                        tempo_geracao_ms=tempo_geracao
+                        tempo_geracao_ms=tempo_geracao,
+                        tool_calls=tool_calls,
+                        finish_reason=finish_reason
                     )
                 else:
                     ProvedorLLMService._atualizar_estatisticas(db, provedor_id, False, tempo_geracao)
