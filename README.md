@@ -1,6 +1,8 @@
-# Fluxi
+<div align="center">
 
-### Sua IA privada no WhatsApp. Sem servidor externo. Sem mensalidade. 100% seu.
+![Fluxi.IA](data/logo_fluxi.png)
+
+### Sua IA privada no WhatsApp...
 
 <div align="center">
 
@@ -10,7 +12,7 @@
 
 ---
 
-## Por que Fluxi?
+## 🤔 Por que Fluxi?
 
 Você já quis ter um assistente de IA no WhatsApp, mas:
 
@@ -25,29 +27,103 @@ Com Docker, um modelo de linguagem local (LM Studio, Ollama) e seu número de Wh
 
 ---
 
-## O que você pode fazer
+## 🚀 O que você pode construir
 
-**Conectar seu sistema financeiro**  
-Lance compras, consulte saldos e gere relatórios direto pelo WhatsApp.
+O Fluxi combina **WhatsApp + RAG + Tools + MCP + IA** (local ou na nuvem). Isso abre possibilidades que vão muito além de um chatbot simples.
 
-**Pesquisar na internet**  
-Integre com Serper.dev, Brave Search ou outros e deixe a IA buscar informações para você.
+### 👤 Assistentes Pessoais
 
-**Perguntar sobre seus documentos**  
-Adicione PDFs, manuais, contratos. A IA responde baseada no conteúdo deles.
+| Caso de Uso | Como Funciona |
+|-------------|---------------|
+| **Controle Financeiro** | Conecte seu sistema financeiro via API. Lance gastos, consulte saldos, gere relatórios - tudo pelo WhatsApp. |
+| **Agenda Inteligente** | Integre com Google Calendar. Marque reuniões, receba lembretes, reorganize compromissos por voz. |
+| **Segunda Memória** | Adicione documentos, anotações, PDFs. Pergunte "o que combinei com o João?" e a IA busca no seu RAG. |
+| **Pesquisador Pessoal** | Conecte Serper.dev, Brave Search ou Jina AI. Peça pesquisas e receba resumos no WhatsApp. |
 
-**Ter múltiplos agentes no mesmo número**  
-Crie um agente de vendas, outro de suporte, outro pessoal. Troque entre eles com `#01`, `#02`.
+### 🏢 Automação de Negócios
 
-**Transcrever áudios automaticamente**  
-Receba um áudio e a IA transcreve e responde (requer API Whisper).
+| Caso de Uso | Como Funciona |
+|-------------|---------------|
+| **Suporte 24/7** | RAG com manuais + ferramentas de consulta. Responde dúvidas técnicas mesmo fora do horário. |
+| **Qualificação de Leads** | Agente coleta informações, consulta CRM via API, agenda reuniões automaticamente. |
+| **Pedidos por WhatsApp** | Integre com seu ERP/sistema de pedidos. Cliente faz pedido conversando naturalmente. |
+| **Consulta de Estoque** | Ferramenta consulta banco de dados. "Tem o produto X?" → resposta em tempo real. |
 
-**Ligar e desligar quando quiser**  
-Comande `#desativar` para pausar, `#ativar` para voltar. Simples.
+### 🔧 Integrações Técnicas
+
+| Caso de Uso | Como Funciona |
+|-------------|---------------|
+| **DevOps no Bolso** | MCP com GitHub + servidor. Crie issues, veja PRs, faça deploy - pelo WhatsApp. |
+| **Consultas SQL** | Conecte PostgreSQL/MySQL via MCP. Pergunte em linguagem natural, receba dados. |
+| **Monitoramento** | Ferramenta consulta métricas. "Como está o servidor?" → status em tempo real. |
+| **IoT e Automação** | APIs REST para controlar dispositivos. "Acenda a luz da sala" via WhatsApp. |
+
+### 🎨 Uso Criativo
+
+| Caso de Uso | Como Funciona |
+|-------------|---------------|
+| **Tutor Personalizado** | RAG com material de estudo + modelo potente (GPT-4, Claude). Tire dúvidas 24h. |
+| **Escritor Assistente** | Envie ideias por áudio, IA transcreve e desenvolve. Revise documentos pelo WhatsApp. |
+| **Tradutor Contextual** | RAG com glossários específicos. Tradução que entende o contexto do seu negócio. |
+| **Curador de Conteúdo** | Busca na web + RAG. "Novidades sobre X" → resumo personalizado. |
 
 ---
 
-## Funcionalidades
+## 🛠️ Crie suas próprias integrações
+
+Você não está limitado às ferramentas prontas. O Fluxi foi feito para desenvolvedores conectarem qualquer coisa.
+
+### Via MCP (Model Context Protocol)
+
+```
+Crie um servidor MCP em qualquer linguagem e conecte ao Fluxi.
+O agente terá acesso às suas ferramentas automaticamente.
+```
+
+Exemplos de MCPs que você pode criar:
+- Consulta ao seu banco de dados interno
+- Integração com seu ERP/CRM
+- Controle de dispositivos IoT
+- Acesso a APIs internas da empresa
+
+### Via API REST (Ferramentas)
+
+```
+Use o Wizard visual para criar ferramentas que chamam suas APIs.
+Sem código - configure método, headers, body e mapeie a resposta.
+```
+
+O Wizard suporta:
+- Qualquer método HTTP (GET, POST, PUT, DELETE)
+- Autenticação (Bearer, API Key, Basic)
+- Variáveis dinâmicas do contexto da conversa
+- Transformação de resposta (JsonPath)
+
+### Via Código Python
+
+```
+Para lógicas complexas, crie ferramentas CODE que executam Python.
+Ideal para cálculos, validações ou transformações de dados.
+```
+
+---
+
+## 🧠 Escolha sua IA
+
+| Opção | Privacidade | Custo | Performance |
+|-------|-------------|-------|-------------|
+| **Ollama / LM Studio** | Total - roda local | Grátis | Depende do hardware |
+| **llama.cpp** | Total - roda local | Grátis | Otimizado para CPU |
+| **OpenRouter** | Dados passam pela API | Pay-per-use | Acesso a 200+ modelos |
+| **OpenAI (GPT-4)** | Dados passam pela API | Pay-per-use | Estado da arte |
+| **Anthropic (Claude)** | Dados passam pela API | Pay-per-use | Excelente para tarefas longas |
+| **Google (Gemini)** | Dados passam pela API | Pay-per-use | Bom custo-benefício |
+
+**Dica**: Use modelo local para conversas sensíveis e modelos na nuvem para tarefas complexas. O Fluxi suporta fallback automático.
+
+---
+
+## ⚡ Funcionalidades
 
 | Recurso | Descrição |
 |---------|-----------|
@@ -64,7 +140,7 @@ Comande `#desativar` para pausar, `#ativar` para voltar. Simples.
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 <div align="center">
 
@@ -84,7 +160,7 @@ Comande `#desativar` para pausar, `#ativar` para voltar. Simples.
 
 ---
 
-## Como Começar
+## 🏁 Como Começar
 
 ### Requisitos
 
@@ -118,7 +194,7 @@ docker-compose up -d --build
 
 ---
 
-## Stack Técnica
+## 🔩 Stack Técnica
 
 | Camada | Tecnologia |
 |--------|------------|
@@ -131,7 +207,7 @@ docker-compose up -d --build
 
 ---
 
-## Arquitetura
+## 📂 Arquitetura
 
 ```
 fluxi/
@@ -151,7 +227,7 @@ Cada módulo tem sua própria documentação em `[modulo]/README.md`.
 
 ---
 
-## Changelog
+## 📋 Changelog
 
 ### v0.2.0 - Novembro 2025
 
@@ -182,7 +258,7 @@ Cada módulo tem sua própria documentação em `[modulo]/README.md`.
 
 ---
 
-## Contribuindo
+## 🤝 Contribuindo
 
 Contribuições são bem-vindas!
 
@@ -194,14 +270,14 @@ Contribuições são bem-vindas!
 
 ---
 
-## Comunidade
+## 💬 Comunidade
 
 - [GitHub Issues](https://github.com/jjhoow/fluxi/issues) - Bugs e sugestões
 - [GitHub Discussions](https://github.com/jjhoow/fluxi/discussions) - Dúvidas e ideias
 
 ---
 
-## Dependências de Terceiros
+## 📦 Dependências de Terceiros
 
 Este projeto utiliza:
 
@@ -213,7 +289,7 @@ Este projeto utiliza:
 
 ---
 
-## Agradecimentos
+## 🙏 Agradecimentos
 
 - [FastAPI](https://fastapi.tiangolo.com/) pelo framework incrível
 - [Neonize](https://github.com/krypton-byte/neonize) por tornar WhatsApp acessível em Python
@@ -222,7 +298,7 @@ Este projeto utiliza:
 
 ---
 
-## Licença
+## 📄 Licença
 
 Apache 2.0 - Veja [LICENSE](LICENSE) para detalhes.
 
