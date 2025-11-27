@@ -1,10 +1,8 @@
 <div align="center">
 
-![Fluxi.IA](data/logo_fluxi.png)
-</div>
-### Sua IA privada no WhatsApp...
+<img src="data/logo_fluxi.png" alt="Fluxi.IA" width="200">
 
-<div align="center">
+### Sua IA privada no WhatsApp...
 
 ![Dashboard](data/screenshot01.png)
 
